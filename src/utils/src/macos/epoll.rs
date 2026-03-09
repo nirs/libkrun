@@ -63,13 +63,20 @@ impl Default for Kevent {
 }
 
 impl Kevent {
-    pub fn new(ident: usize, filter: i16, flags: u16, udata: u64) -> Self {
+    pub fn new(
+        ident: usize,
+        filter: i16,
+        flags: u16,
+        udata: u64,
+        fflags: u32,
+        data: isize,
+    ) -> Self {
         Kevent(libc::kevent {
             ident,
             filter,
             flags,
-            fflags: 0,
-            data: 0,
+            fflags,
+            data,
             udata: udata as *mut libc::c_void,
         })
     }
@@ -167,6 +174,8 @@ impl Epoll {
                         libc::EVFILT_READ,
                         libc::EV_ADD | clear,
                         event.u64,
+                        0,
+                        0,
                     ));
                 }
                 if eset.contains(EventSet::OUT) {
@@ -176,6 +185,8 @@ impl Epoll {
                         libc::EVFILT_WRITE,
                         libc::EV_ADD | clear,
                         event.u64,
+                        0,
+                        0,
                     ));
                 }
                 let ret = unsafe {
@@ -199,12 +210,16 @@ impl Epoll {
                         libc::EVFILT_READ,
                         libc::EV_DELETE,
                         event.u64,
+                        0,
+                        0,
                     ));
                     kevs.push(Kevent::new(
                         fd as usize,
                         libc::EVFILT_WRITE,
                         libc::EV_DELETE,
                         event.u64,
+                        0,
+                        0,
                     ));
                 } else {
                     if eset.contains(EventSet::IN) {
@@ -214,6 +229,8 @@ impl Epoll {
                             libc::EVFILT_READ,
                             libc::EV_DELETE,
                             event.u64,
+                            0,
+                            0,
                         ));
                     }
                     if eset.contains(EventSet::OUT) {
@@ -223,6 +240,8 @@ impl Epoll {
                             libc::EVFILT_WRITE,
                             libc::EV_DELETE,
                             event.u64,
+                            0,
+                            0,
                         ));
                     }
                 }
