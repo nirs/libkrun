@@ -180,13 +180,17 @@ impl Epoll {
                 }
                 if eset.contains(EventSet::OUT) {
                     debug!("add fd out: {fd}");
+                    // Only fire writable event when there is enough room for a
+                    // full frame, avoiding spurious wakeups on datagram sockets
+                    // that report writable with insufficient space.
+                    const WRITE_LOWAT: isize = 65550;
                     kevs.push(Kevent::new(
                         fd as usize,
                         libc::EVFILT_WRITE,
                         libc::EV_ADD | clear,
                         event.u64,
-                        0,
-                        0,
+                        libc::NOTE_LOWAT,
+                        WRITE_LOWAT,
                     ));
                 }
                 let ret = unsafe {
